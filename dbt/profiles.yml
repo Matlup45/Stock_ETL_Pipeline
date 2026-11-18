@@ -1,0 +1,12 @@
+stock_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 54332
+      user: etl_user
+      password: "{{ env_var('WAREHOUSE_PASSWORD') }}"
+      dbname: stock_dw
+      schema: public
+      threads: 4

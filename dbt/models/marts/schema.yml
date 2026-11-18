@@ -1,0 +1,28 @@
+version: 2
+models:
+  - name: fact_indicators
+    columns:
+      - name: stock_key
+        tests: [not_null]
+      - name: trade_date
+        tests: [not_null]
+  - name: dim_stock
+    columns:
+      - name: stock_key
+        tests: [unique, not_null]
+      - name: ticker
+        tests: [unique, not_null]
+  - name: dim_date
+    columns:
+      - name: date_key
+        tests: [unique, not_null]
+  - name: fact_daily_prices
+    columns:
+      - name: stock_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_stock')
+              field: stock_key
+      - name: close_price
+        tests: [not_null]
