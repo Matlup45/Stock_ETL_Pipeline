@@ -1,5 +1,5 @@
 """LOAD: idempotent writes into Postgres."""
-from datetime import date
+from datetime import date, datetime
 
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -47,3 +47,36 @@ def upsert_prices(engine: Engine, df: pd.DataFrame) -> int:
     with engine.begin() as conn:      # one transaction: all rows load, or none do
         conn.execute(sql, records)
     return len(records)
+
+def save_raw_parquet(df: pd.DataFrame, ticker: str) -> None:
+    """Keep an untouched copy of what the API returned: data/raw/prices/ticker=X/run_date=....parquet"""
+    if df.empty:
+        return
+    folder = config.RAW_DIR / "prices" / f"ticker={ticker}"
+    folder.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(folder / f"run_date={datetime.now():%Y-%m-%d}.parquet", index=False)
+
+
+def upsert_metadata(engine: Engine, tickers: list[dict]) -> None:
+    sql = text("""
+        INSERT INTO raw.stock_metadata (ticker, name, sector, exchange)
+        VALUES (:symbol, :name, :sector, :exchange)
+        ON CONFLICT (ticker) DO UPDATE SET
+            name = EXCLUDED.name, sector = EXCLUDED.sector,
+            exchange = EXCLUDED.exchange, loaded_at = now()
+    """)
+    with engine.begin() as conn:
+        conn.execute(sql, tickers)
+
+
+def log_run(engine: Engine, ticker: str, status: str, fetched=0, loaded=0,
+            rejected=0, duration=0.0, error: str | None = None) -> None:
+    """One row per ticker per run in ops.pipeline_runs (powers the health dashboard later)."""
+    sql = text("""
+        INSERT INTO ops.pipeline_runs
+            (ticker, status, rows_fetched, rows_loaded, rows_rejected, duration_sec, error_message)
+        VALUES (:t, :s, :f, :l, :r, :d, :e)
+    """)
+    with engine.begin() as conn:
+        conn.execute(sql, {"t": ticker, "s": status, "f": fetched, "l": loaded,
+                           "r": rejected, "d": duration, "e": error})
