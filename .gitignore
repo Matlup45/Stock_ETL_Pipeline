@@ -7,4 +7,5 @@ data/silver/*
 dbt/target/
 dbt/logs/
 logs/
-.pytest_cache/
+.pytest_cache/dbt/.user.yml
+.gitignore

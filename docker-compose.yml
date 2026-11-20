@@ -15,5 +15,40 @@ services:
       interval: 10s
       retries: 5
 
+  airflow:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.airflow
+    env_file: .env
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${WAREHOUSE_USER}:${WAREHOUSE_PASSWORD}@warehouse:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__WORKERS: "1"
+      AIRFLOW__SCHEDULER__PARSING_PROCESSES: "1"
+      AIRFLOW__CORE__PARALLELISM: "2"
+      PYTHONPATH: /opt/airflow/src
+      WAREHOUSE_HOST: warehouse   # inside Docker, the database is reached by service name
+      WAREHOUSE_PORT: "5432"      # and on its internal port, not 54332
+    mem_limit: 2500m
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./dbt:/opt/airflow/dbt
+      - ./config:/opt/airflow/config
+      - ./data:/opt/airflow/data
+      - airflow_logs:/opt/airflow/logs
+    depends_on:
+      warehouse:
+        condition: service_healthy
+    command: >
+      bash -c "airflow db migrate &&
+      (airflow users create --username admin --password $${AIRFLOW_ADMIN_PASSWORD}
+      --firstname Admin --lastname User --role Admin --email admin@example.com || true) &&
+      exec airflow standalone"
+
 volumes:
   warehouse_data:
+  airflow_logs:

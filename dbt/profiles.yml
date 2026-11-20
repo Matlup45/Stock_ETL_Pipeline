@@ -3,10 +3,10 @@ stock_analytics:
   outputs:
     dev:
       type: postgres
-      host: localhost
-      port: 54332
+      host: "{{ env_var('WAREHOUSE_HOST', 'localhost') }}"
+      port: "{{ env_var('WAREHOUSE_PORT', '54332') | as_number }}"
       user: etl_user
       password: "{{ env_var('WAREHOUSE_PASSWORD') }}"
       dbname: stock_dw
       schema: public
-      threads: 4
+      threads: 2
