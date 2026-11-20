@@ -14,7 +14,7 @@ log = get_logger(__name__)
 def fetch_prices(ticker: str, start: date, end: date) -> pd.DataFrame:
     """Fetch daily prices in [start, end). Note: yfinance 'end' is exclusive."""
     log.info("Fetching %s from %s to %s", ticker, start, end)
-    df = yf.Ticker(ticker).history(start=str(start), end=str(end), auto_adjust=False)
+    df = yf.Ticker(ticker).history(start=str(start), end=str(end), auto_adjust=False, timeout=20)
     if df is None or df.empty:
         return pd.DataFrame()
     return df.reset_index()

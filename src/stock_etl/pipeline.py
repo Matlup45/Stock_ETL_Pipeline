@@ -42,7 +42,9 @@ def run(tickers: list[str] | None = None, backfill_from: str | None = None) -> N
             raw = fetch_prices(ticker, start, end)
             if raw.empty:
                 log.warning("%s: no data returned", ticker)
-                log_run(engine, ticker, "NO_DATA", duration=time.time() - t0)
+                log_run(engine, ticker, "NO_DATA", duration=time.time() - t0,
+                        error="API returned no rows")
+                failures.append(ticker)   # empty is suspicious: fail loudly, after the other tickers finish
                 continue
 
             save_raw_parquet(raw, ticker)

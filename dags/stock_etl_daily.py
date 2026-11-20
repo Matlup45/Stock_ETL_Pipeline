@@ -19,6 +19,7 @@ default_args = {
     "retries": 3,                           # try again if the API hiccups
     "retry_delay": timedelta(minutes=5),
     "retry_exponential_backoff": True,      # wait longer after each failure
+    "execution_timeout": timedelta(minutes=15),
 }
 
 

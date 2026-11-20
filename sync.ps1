@@ -1,0 +1,6 @@
+$c = "stock_etl_pipeline-airflow-1"
+docker cp dags\. "${c}:/opt/airflow/dags/"
+docker cp src\. "${c}:/opt/airflow/src/"
+docker cp dbt\. "${c}:/opt/airflow/dbt/"
+docker cp config\. "${c}:/opt/airflow/config/"
+Write-Host "Synced code into Airflow container"
